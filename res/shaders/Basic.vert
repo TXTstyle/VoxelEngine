@@ -2,7 +2,7 @@
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec2 texCoords;
-layout(location = 2) in vec4 offset;
+layout(location = 2) in int voxelData;
 
 uniform mat4 u_MVP;
 uniform vec3 u_WorldPos;
@@ -20,7 +20,14 @@ const vec3 NORMALS[6] = vec3[6](
     );
 
 void main() {
-    int face = int(offset.w);
+
+    int z = voxelData & 31;
+    int y = (voxelData >> 5) & 31;
+    int x = (voxelData >> 10) & 31;
+    int face = (voxelData >> 15) & 7;
+    int type = (voxelData >> 18) & 15;
+
+    vec3 offset = vec3(x, y, z);
     vec3 basePos = position;
 
     if (face == 0) { // yp
@@ -41,5 +48,5 @@ void main() {
 
     vNorm = NORMALS[face];
     vUV = texCoords;
-    gl_Position = u_MVP * vec4(basePos.xyz + offset.xyz + u_WorldPos.xyz, 1.0);
+    gl_Position = u_MVP * vec4(basePos + offset + u_WorldPos.xyz, 1.0);
 }

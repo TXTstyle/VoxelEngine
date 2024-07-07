@@ -1,6 +1,7 @@
 #include "Chunk.hpp"
 #include "Shader.hpp"
 #include "VertexArray.hpp"
+#include "VertexBufferLayout.hpp"
 #include <array>
 
 using namespace Voxel;
@@ -21,15 +22,15 @@ Chunk::Chunk(glm::vec3 worldPos, const std::array<Vertex, 4>& verts)
 
     glEnableVertexAttribArray(2);
     ivb.Bind();
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4),
-                          (void*)0);
+    glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(unsigned int),
+                           (void*)0);
     ivb.Unbind();
     glVertexAttribDivisor(2, 1);
 
     for (int x = 0; x < 32; x++) {
         for (int y = 0; y < 32; y++) {
             for (int z = 0; z < 32; z++) {
-                data[x][y][z] = true;
+                data[x][y][z] = 1;
             }
         }
     }
@@ -57,12 +58,23 @@ void Chunk::Build() {
         }
     }
     ivb.Bind();
-    ivb.SubData(0, sides.size() * sizeof(glm::vec4), sides.data());
+    ivb.SubData(0, sides.size() * sizeof(unsigned int), sides.data());
     std::cout << "Chunk Built, sides: " << sides.size() << std::endl;
 }
 
+unsigned int encodeSideData(int x, int y, int z, VoxelSides side, char type) {
+    unsigned int data = 0;
+    data = static_cast<unsigned int>(type);
+    data = (data << 3) | static_cast<unsigned int>(side);
+    data = (data << 5) | x;
+    data = (data << 5) | y;
+    data = (data << 5) | z;
+
+    return data;
+}
+
 void Chunk::AddSides(int x, int y, int z) {
-    bool voxel = At({x, y, z});
+    char voxel = At({x, y, z});
 
     // if empty exit
     if (!voxel)
@@ -70,22 +82,23 @@ void Chunk::AddSides(int x, int y, int z) {
 
     // Check faces
     if (!At({x, y + 1, z}))
-        sides.push_back({x, y, z, (float)VoxelSides::yp});
+        sides.push_back(encodeSideData(x, y, z, VoxelSides::yp, voxel));
     if (!At({x, y - 1, z}))
-        sides.push_back({x, y, z, (float)VoxelSides::yn});
+        sides.push_back(encodeSideData(x, y, z, VoxelSides::yn, voxel));
     if (!At({x + 1, y, z}))
-        sides.push_back({x, y, z, (float)VoxelSides::xp});
+        sides.push_back(encodeSideData(x, y, z, VoxelSides::xp, voxel));
     if (!At({x - 1, y, z}))
-        sides.push_back({x, y, z, (float)VoxelSides::xn});
+        sides.push_back(encodeSideData(x, y, z, VoxelSides::xn, voxel));
     if (!At({x, y, z + 1}))
-        sides.push_back({x, y, z, (float)VoxelSides::zp});
+        sides.push_back(encodeSideData(x, y, z, VoxelSides::zp, voxel));
     if (!At({x, y, z - 1}))
-        sides.push_back({x, y, z, (float)VoxelSides::zn});
+        sides.push_back(encodeSideData(x, y, z, VoxelSides::zn, voxel));
 }
 
-bool Chunk::At(glm::vec3 pos) {
+char Chunk::At(glm::vec3 pos) {
     if (pos.x < 0 || pos.y < 0 || pos.z < 0) {
-        // std::cout << "Underflow at: " << pos.x << " " << pos.y << " " << pos.z
+        // std::cout << "Underflow at: " << pos.x << " " << pos.y << " " <<
+        // pos.z
         //           << std::endl;
         return false;
     }
