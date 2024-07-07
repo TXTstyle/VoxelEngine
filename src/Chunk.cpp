@@ -25,8 +25,17 @@ Chunk::Chunk(glm::vec3 worldPos, const std::array<Vertex, 4>& verts)
                           (void*)0);
     ivb.Unbind();
     glVertexAttribDivisor(2, 1);
-    std::cout << "Chunk created, at: " << this->worldPos.x << " " << this->worldPos.y << " "
-              << this->worldPos.z << std::endl;
+
+    for (int x = 0; x < 32; x++) {
+        for (int y = 0; y < 32; y++) {
+            for (int z = 0; z < 32; z++) {
+                data[x][y][z] = true;
+            }
+        }
+    }
+
+    std::cout << "Chunk created, at: " << this->worldPos.x << " "
+              << this->worldPos.y << " " << this->worldPos.z << std::endl;
 }
 
 Chunk::~Chunk() { std::cout << "Chunk deleted" << std::endl; }
@@ -43,7 +52,7 @@ void Chunk::Build() {
     for (int x = 0; x < 32; x++) {
         for (int y = 0; y < 32; y++) {
             for (int z = 0; z < 32; z++) {
-                AddCude({x, y, z});
+                AddSides(x, y, z);
             }
         }
     }
@@ -52,11 +61,40 @@ void Chunk::Build() {
     std::cout << "Chunk Built, sides: " << sides.size() << std::endl;
 }
 
-void Chunk::AddCude(glm::vec3 pos) {
-    sides.push_back({pos.x, pos.y, pos.z, (float)VoxelSides::yp});
-    sides.push_back({pos.x, pos.y, pos.z, (float)VoxelSides::yn});
-    sides.push_back({pos.x, pos.y, pos.z, (float)VoxelSides::xp});
-    sides.push_back({pos.x, pos.y, pos.z, (float)VoxelSides::xn});
-    sides.push_back({pos.x, pos.y, pos.z, (float)VoxelSides::zp});
-    sides.push_back({pos.x, pos.y, pos.z, (float)VoxelSides::zn});
+void Chunk::AddSides(int x, int y, int z) {
+    bool voxel = At({x, y, z});
+
+    // if empty exit
+    if (!voxel)
+        return;
+
+    // Check faces
+    if (!At({x, y + 1, z}))
+        sides.push_back({x, y, z, (float)VoxelSides::yp});
+    if (!At({x, y - 1, z}))
+        sides.push_back({x, y, z, (float)VoxelSides::yn});
+    if (!At({x + 1, y, z}))
+        sides.push_back({x, y, z, (float)VoxelSides::xp});
+    if (!At({x - 1, y, z}))
+        sides.push_back({x, y, z, (float)VoxelSides::xn});
+    if (!At({x, y, z + 1}))
+        sides.push_back({x, y, z, (float)VoxelSides::zp});
+    if (!At({x, y, z - 1}))
+        sides.push_back({x, y, z, (float)VoxelSides::zn});
+}
+
+bool Chunk::At(glm::vec3 pos) {
+    if (pos.x < 0 || pos.y < 0 || pos.z < 0) {
+        // std::cout << "Underflow at: " << pos.x << " " << pos.y << " " << pos.z
+        //           << std::endl;
+        return false;
+    }
+
+    if (pos.x > 31 || pos.y > 31 || pos.z > 31) {
+        // std::cout << "Overflow at: " << pos.x << " " << pos.y << " " << pos.z
+        //           << std::endl;
+        return false;
+    }
+
+    return data[pos.x][pos.y][pos.z];
 }

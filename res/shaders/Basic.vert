@@ -33,10 +33,10 @@ void main() {
         basePos.xy = basePos.yx;
     } else if (face == 4) { // zp
         basePos.xyz = basePos.xzy;
-    } else if (face == 5) { // zn
-        basePos.xyz = basePos.xzy;
         basePos.x *= -1;
         basePos.z++;
+    } else if (face == 5) { // zn
+        basePos.xyz = basePos.xzy;
     }
 
     vNorm = NORMALS[face];

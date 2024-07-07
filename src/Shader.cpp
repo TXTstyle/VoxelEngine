@@ -108,7 +108,7 @@ void Shader::SetVec4f(const std::string& name, glm::vec4 values,
     if (useShader)
         this->Use();
     glUniform4f(glGetUniformLocation(RenderID, name.c_str()), values.x,
-                values.y, values.y, values.w);
+                values.y, values.z, values.w);
 }
 void Shader::SetVec3f(const std::string& name, glm::vec3 values,
                       bool useShader) {
