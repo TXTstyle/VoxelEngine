@@ -1,6 +1,7 @@
 #include "Renderer.hpp"
 #include "Shader.hpp"
 #include <GLFW/glfw3.h>
+#include <cstdlib>
 #include <glm/ext/matrix_transform.hpp>
 #include <stdexcept>
 #include <iostream>
@@ -14,6 +15,7 @@ void GLAPIENTRY Vision::MessageCallback(GLenum source, GLenum type, GLuint id,
                "Id: 0x%x\nSeverity: 0x%x\n",
                source, type, id, severity);
         printf("%s\n", message);
+        exit(1);
     }
 }
 
@@ -72,7 +74,7 @@ void Renderer::Init(const glm::vec2 windowSize, const std::string windowName) {
 
 void Renderer::Shutdown() { glfwTerminate(); }
 
-void Renderer::Draw(const VertexArray& va, const Shader& shader, uint32_t instanceCount) {
+void Renderer::Draw(const VertexArray& va, const Shader& shader, const uint32_t instanceCount) {
     va.Bind();
     shader.Use();
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, instanceCount);

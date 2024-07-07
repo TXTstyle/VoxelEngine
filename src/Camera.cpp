@@ -21,18 +21,21 @@ Camera::Camera(Renderer& renderer, const glm::vec3 startPos,
 Camera::~Camera() {}
 
 void Camera::Controls(Renderer& renderer) {
-    float mouseX = lastX;
-    float mouseY = lastY;
-    if (!cursorOn) {
-        mouseX = renderer.GetMousePos().x;
-        mouseY = renderer.GetMousePos().y;
-    }
+    float mouseX = 0;
+    float mouseY = 0;
 
     if (firstMouse) // initially set to true
     {
         lastX = mouseX;
         lastY = mouseX;
         firstMouse = false;
+    }
+
+    mouseX = lastX;
+    mouseY = lastY;
+    if (!cursorOn) {
+        mouseX = renderer.GetMousePos().x;
+        mouseY = renderer.GetMousePos().y;
     }
 
     float xoffset = mouseX - lastX;
@@ -87,7 +90,7 @@ void Camera::Controls(Renderer& renderer) {
 
     float speed = deltaTime * camSpeed;
     if (glfwGetKey(renderer.GetWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-        speed *= 3.0f;
+        speed *= 10.0f;
     } else if (glfwGetKey(renderer.GetWindow(), GLFW_KEY_LEFT_CONTROL) ==
                GLFW_PRESS) {
         speed *= 0.5f;

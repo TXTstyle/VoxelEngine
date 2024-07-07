@@ -33,6 +33,8 @@ class Shader {
     void SetFloat(const std::string& name, float value, bool useShader = false);
     void SetVec4f(const std::string& name, glm::vec4 values,
                   bool useShader = false);
+    void SetVec3f(const std::string& name, glm::vec3 values,
+                  bool useShader = false);
     void SetMat4f(const std::string& name, const glm::mat4& matrix,
                   bool useShader = false);
 

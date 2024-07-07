@@ -12,6 +12,8 @@ class VertexArray {
     VertexArray();
     ~VertexArray();
 
+    inline unsigned int GetID() {return rendererID; }
+
     void AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
 
     void Bind() const;

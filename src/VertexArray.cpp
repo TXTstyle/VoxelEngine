@@ -3,9 +3,19 @@
 
 using namespace Vision;
 
-VertexArray::VertexArray() { glGenVertexArrays(1, &rendererID); }
+#include <iostream>
 
-VertexArray::~VertexArray() { glDeleteVertexArrays(1, &rendererID); }
+VertexArray::VertexArray() {
+    glGenVertexArrays(1, &rendererID);
+    Bind();
+    std::cout << "VAO created, id: " << rendererID << std::endl;
+}
+
+VertexArray::~VertexArray() { 
+    glDeleteVertexArrays(1, &rendererID);
+    std::cout << "VAO deleted, id: " << rendererID << std::endl;
+
+}
 
 void VertexArray::AddBuffer(const VertexBuffer& vb,
                             const VertexBufferLayout& layout) {

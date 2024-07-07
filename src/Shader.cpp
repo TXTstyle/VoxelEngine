@@ -110,6 +110,13 @@ void Shader::SetVec4f(const std::string& name, glm::vec4 values,
     glUniform4f(glGetUniformLocation(RenderID, name.c_str()), values.x,
                 values.y, values.y, values.w);
 }
+void Shader::SetVec3f(const std::string& name, glm::vec3 values,
+                      bool useShader) {
+    if (useShader)
+        this->Use();
+    glUniform3f(glGetUniformLocation(RenderID, name.c_str()), values.x,
+                values.y, values.z);
+}
 void Shader::SetMat4f(const std::string& name, const glm::mat4& matrix,
                       bool useShader) {
     if (useShader)

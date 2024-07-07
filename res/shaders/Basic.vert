@@ -2,10 +2,10 @@
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec2 texCoords;
-layout(location = 2) in vec3 offset;
+layout(location = 2) in vec4 offset;
 
 uniform mat4 u_MVP;
-//uniform vec3 u_WorldPos;
+uniform vec3 u_WorldPos;
 
 out vec2 vUV;
 out vec3 vNorm;
@@ -20,7 +20,7 @@ const vec3 NORMALS[6] = vec3[6](
     );
 
 void main() {
-    int face = int(offset.x);
+    int face = int(offset.w);
     vec3 basePos = position;
 
     if (face == 0) { // yp
@@ -39,7 +39,7 @@ void main() {
         basePos.z++;
     }
 
-    vNorm = NORMALS[0];
+    vNorm = NORMALS[face];
     vUV = texCoords;
-    gl_Position = u_MVP * vec4(basePos, 1.0);
+    gl_Position = u_MVP * vec4(basePos.xyz + offset.xyz + u_WorldPos.xyz, 1.0);
 }
