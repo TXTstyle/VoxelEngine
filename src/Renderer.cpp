@@ -72,11 +72,10 @@ void Renderer::Init(const glm::vec2 windowSize, const std::string windowName) {
 
 void Renderer::Shutdown() { glfwTerminate(); }
 
-void Renderer::Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) {
+void Renderer::Draw(const VertexArray& va, const Shader& shader, uint32_t instanceCount) {
     va.Bind();
-    ib.Bind();
     shader.Use();
-    glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr);
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, instanceCount);
 }
 
 void GenOriVerts(const glm::vec3 rot, glm::vec2 sizeOffset, glm::vec3 p_pos,

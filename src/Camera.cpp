@@ -109,6 +109,10 @@ void Camera::Controls(Renderer& renderer) {
     }
 
     viewMat = glm::lookAt(camPos, camPos + camFront, camUp);
+    projMat = glm::perspective(glm::radians(camFov),
+                               renderer.GetWindowSize().x /
+                                   renderer.GetWindowSize().y,
+                               camClip.x, camClip.y);
 }
 
 glm::mat4& Camera::getProjMat() { return projMat; }

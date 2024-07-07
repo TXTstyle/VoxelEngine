@@ -1,5 +1,4 @@
 #pragma once
-#include "IndexBuffer.hpp"
 #include "Shader.hpp"
 #include "VertexArray.hpp"
 #include <glad/glad.h>
@@ -20,8 +19,7 @@ class Renderer {
     void Init(const glm::vec2 windowSize, const std::string windowName);
     void Shutdown();
 
-    void Draw(const VertexArray& va, const IndexBuffer& ib,
-              const Shader& shader);
+    void Draw(const VertexArray& va, const Shader& shader, uint32_t instanceCount);
 
     void Clear(const glm::vec3 color);
     bool ShouldClose();
@@ -32,7 +30,8 @@ class Renderer {
     inline GLFWwindow* GetWindow() { return window; }
     inline glm::vec2& GetMousePos() { return mousePos; }
 
-  private: GLFWwindow* window;
+  private:
+    GLFWwindow* window;
     glm::vec2 windowSize;
 
     glm::vec2 mousePos;
