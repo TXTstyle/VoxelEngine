@@ -25,7 +25,7 @@ void main() {
     int y = (voxelData >> 5) & 31;
     int x = (voxelData >> 10) & 31;
     int face = (voxelData >> 15) & 7;
-    int type = (voxelData >> 18) & 15;
+    int type = ((voxelData >> 18) & 15) - 1;
 
     vec3 offset = vec3(x, y, z);
     vec3 basePos = position;
@@ -46,7 +46,10 @@ void main() {
         basePos.xyz = basePos.xzy;
     }
 
+    vec2 texPos = vec2(type % 4, type / 4);
+    texPos.y = 3 - texPos.y;
+    vUV = (texCoords + texPos) * 0.25;
+
     vNorm = NORMALS[face];
-    vUV = texCoords;
     gl_Position = u_MVP * vec4(basePos + offset + u_WorldPos.xyz, 1.0);
 }

@@ -3,6 +3,7 @@
 #include "VertexArray.hpp"
 #include "VertexBufferLayout.hpp"
 #include <array>
+#include <bitset>
 
 using namespace Voxel;
 
@@ -27,10 +28,12 @@ Chunk::Chunk(glm::vec3 worldPos, const std::array<Vertex, 4>& verts)
     ivb.Unbind();
     glVertexAttribDivisor(2, 1);
 
+    int t = 0;
     for (int x = 0; x < 32; x++) {
         for (int y = 0; y < 32; y++) {
             for (int z = 0; z < 32; z++) {
-                data[x][y][z] = 1;
+                data[x][y][z] = t % 4 + 1;
+                t++;
             }
         }
     }
@@ -57,6 +60,7 @@ void Chunk::Build() {
             }
         }
     }
+    // std::cout << std::bitset<32>(sides[501]) << std::endl;
     ivb.Bind();
     ivb.SubData(0, sides.size() * sizeof(unsigned int), sides.data());
     std::cout << "Chunk Built, sides: " << sides.size() << std::endl;

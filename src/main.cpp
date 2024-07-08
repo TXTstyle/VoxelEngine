@@ -46,7 +46,7 @@ int main() {
     Vision::Shader shader("res/shaders/Basic.vert", "res/shaders/Basic.frag");
     shader.Use();
 
-    Vision::Texture texture("res/textures/Grass_texture.png", true);
+    Vision::Texture texture("res/textures/texture_atlas.png", true);
     texture.Bind();
     shader.SetInt("u_Texture", 0);
 
