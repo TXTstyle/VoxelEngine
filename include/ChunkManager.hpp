@@ -15,13 +15,16 @@ class Manager {
 
   private:
     std::vector<Voxel::Chunk> chunks;
+    Chunk dummy;
+    uint32_t renderDistLen;
 
     Vision::VertexArray va;
     Vision::VertexBuffer vb;
     Vision::VertexBuffer ivb;
     static const std::array<Voxel::Vertex, 4> verts;
 
-    void BuildChunk(Chunk& chunk, int index);
-    char At(Chunk& chunk, glm::vec3 pos, int index = 0);
+    void BuildChunk(Chunk& chunk);
+    char At(Chunk& chunk, glm::vec3 pos);
+    Chunk& GetChunkAt(glm::vec3& cPos, const glm::vec3 offset);
 };
 } // namespace Voxel

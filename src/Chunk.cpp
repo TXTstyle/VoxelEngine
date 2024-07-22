@@ -40,3 +40,13 @@ void Chunk::AddSide(int x, int y, int z, VoxelSide side, char voxel) {
 }
 
 char Chunk::At(glm::vec3 pos) { return data[pos.x][pos.y][pos.z]; }
+
+void Chunk::Fill(char voxel) {
+    for (int x = 0; x < 32; x++) {
+        for (int y = 0; y < 32; y++) {
+            for (int z = 0; z < 32; z++) {
+                data[x][y][z] = voxel;
+            }
+        }
+    }
+}

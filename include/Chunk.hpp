@@ -30,6 +30,8 @@ class Chunk {
     void AddSide(int x, int y, int z, VoxelSide side, char voxel);
     char At(glm::vec3 pos);
 
+    void Fill(char voxel);
+
     inline size_t GetInstCount() { return sides.size(); }
     inline glm::vec3& GetWorldPos() { return worldPos; }
     inline void SetVoxel(char state, int x, int y, int z) {
