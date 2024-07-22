@@ -19,7 +19,8 @@ class Renderer {
     void Init(const glm::vec2 windowSize, const std::string windowName);
     void Shutdown();
 
-    void Draw(const VertexArray& va, const Shader& shader, const uint32_t instanceCount);
+    void Draw(const VertexArray& va, const Shader& shader,
+              const uint32_t instanceCount, const uint32_t instanceOffset);
 
     void Clear(const glm::vec3 color);
     bool ShouldClose();

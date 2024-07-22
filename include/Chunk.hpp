@@ -1,8 +1,6 @@
 #pragma once
 
-#include "Renderer.hpp"
-#include "VertexArray.hpp"
-#include "VertexBuffer.hpp"
+#include <glm/glm.hpp>
 #include <array>
 #include <cmath>
 #include <glm/ext/vector_float4.hpp>
@@ -15,36 +13,34 @@ struct Vertex {
     glm::vec2 uv;
 };
 
-class Chunk {
-  public:
-    Chunk(glm::vec3 worldPos, const std::array<Vertex, 4>& verts);
-    ~Chunk();
-
-    void Draw(Vision::Renderer& renderer, Vision::Shader& shader);
-    void Build();
-
-    inline size_t GetInstCount() { return sides.size(); }
-    inline glm::vec3& GetWorldPos() { return worldPos; }
-    inline void SetVoxel(char state,int x, int y, int z) { data[x][y][z] = state; }
-
-  private:
-    glm::vec3 worldPos;
-    std::array<std::array<std::array<char, 32>, 32>, 32> data;
-    std::vector<unsigned int> sides;
-    Vision::VertexArray va;
-    Vision::VertexBuffer vb;
-    Vision::VertexBuffer ivb;
-
-    void AddSides(int x, int y, int z);
-    char At(glm::vec3 pos);
-};
-
-enum VoxelSides {
+enum VoxelSide {
     yp = 0,
     yn,
     xp,
     xn,
     zp,
     zn,
+};
+
+class Chunk {
+  public:
+    Chunk(glm::vec3 worldPos);
+    ~Chunk();
+
+    void AddSide(int x, int y, int z, VoxelSide side, char voxel);
+    char At(glm::vec3 pos);
+
+    inline size_t GetInstCount() { return sides.size(); }
+    inline glm::vec3& GetWorldPos() { return worldPos; }
+    inline void SetVoxel(char state, int x, int y, int z) {
+        data[x][y][z] = state;
+    }
+    inline void ClearSides() { sides.clear(); };
+    inline unsigned int* GetSides() { return sides.data(); }
+
+  private:
+    glm::vec3 worldPos;
+    std::array<std::array<std::array<char, 32>, 32>, 32> data;
+    std::vector<unsigned int> sides;
 };
 } // namespace Voxel

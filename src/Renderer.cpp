@@ -74,29 +74,13 @@ void Renderer::Init(const glm::vec2 windowSize, const std::string windowName) {
 
 void Renderer::Shutdown() { glfwTerminate(); }
 
-void Renderer::Draw(const VertexArray& va, const Shader& shader, const uint32_t instanceCount) {
+void Renderer::Draw(const VertexArray& va, const Shader& shader,
+                    const uint32_t instanceCount,
+                    const uint32_t instanceOffset) {
     va.Bind();
     shader.Use();
-    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, instanceCount);
-}
-
-void GenOriVerts(const glm::vec3 rot, glm::vec2 sizeOffset, glm::vec3 p_pos,
-                 glm::vec4* pos) {
-    glm::mat4 model(1.0f);
-    model = glm::rotate(model, glm::radians(rot.x), {1.0f, 0, 0});
-    model = glm::rotate(model, glm::radians(rot.y), {0, 1.0f, 0});
-    model = glm::rotate(model, glm::radians(rot.z), {0, 0, 1.0f});
-
-    pos[0] = model * glm::vec4(-sizeOffset.x, -sizeOffset.y, 0.0f, 1.0f);
-    pos[1] = model * glm::vec4(sizeOffset.x, -sizeOffset.y, 0.0f, 1.0f);
-    pos[2] = model * glm::vec4(sizeOffset.x, sizeOffset.y, 0.0f, 1.0f);
-    pos[3] = model * glm::vec4(-sizeOffset.x, sizeOffset.y, 0.0f, 1.0f);
-
-    model = glm::translate(glm::mat4(1.0f), p_pos);
-    pos[0] = model * pos[0];
-    pos[1] = model * pos[1];
-    pos[2] = model * pos[2];
-    pos[3] = model * pos[3];
+    glDrawArraysInstancedBaseInstance(GL_TRIANGLE_STRIP, 0, 4, instanceCount,
+                                      instanceOffset);
 }
 
 void Renderer::Clear(const glm::vec3 color) {

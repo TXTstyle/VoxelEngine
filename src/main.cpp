@@ -6,11 +6,9 @@
 #include <cstdlib>
 #include <glm/trigonometric.hpp>
 #include <iostream>
-#include <array>
-#include <vector>
 
 #include "Camera.hpp"
-#include "Chunk.hpp"
+#include "ChunkManager.hpp"
 #include "Texture.hpp"
 #include "Renderer.hpp"
 #include "Shader.hpp"
@@ -25,23 +23,10 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    const std::array<Voxel::Vertex, 4> verts = {
-        Voxel::Vertex{{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f}},
-        Voxel::Vertex{{-0.5f, -0.5f, 0.5f}, {0.0f, 1.0f}},
-        Voxel::Vertex{{0.5f, -0.5f, -0.5f}, {1.0f, 0.0f}},
-        Voxel::Vertex{{0.5f, -0.5f, 0.5f}, {1.0f, 1.0f}},
-    };
 
-    std::vector<Voxel::Chunk> chunks;
-    chunks.reserve(9);
-    for (int x = 0; x < 3; x++) {
-        for (int z = 0; z < 3; z++) {
-            chunks.emplace_back(glm::vec3(x*33.0f, 0.0f, z*33.0f), verts);
-        }
-    }
-    for (size_t i = 0; i < chunks.size(); i++) {
-        chunks[i].Build();
-    }
+    int renderDistance = 3;
+    Voxel::Manager chunks(renderDistance);
+    chunks.Build();
 
     Vision::Shader shader("res/shaders/Basic.vert", "res/shaders/Basic.frag");
     shader.Use();
@@ -64,9 +49,7 @@ int main() {
         shader.Use();
         shader.SetMat4f("u_MVP", mvp);
 
-        for (size_t i = 0; i < chunks.size(); i++) {
-            chunks[i].Draw(renderer, shader);
-        }
+        chunks.Draw(renderer, shader);
 
         renderer.Swap();
     }
