@@ -51,5 +51,5 @@ void main() {
     vUV = (texCoords + texPos) * 0.25;
 
     vNorm = NORMALS[face];
-    gl_Position = u_MVP * vec4(basePos + offset + u_WorldPos.xyz, 1.0);
+    gl_Position = u_MVP * vec4(basePos + offset + u_WorldPos * 32.0, 1.0);
 }

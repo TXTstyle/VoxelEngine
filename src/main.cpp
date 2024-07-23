@@ -4,7 +4,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <cstdlib>
-#include <glm/trigonometric.hpp>
 #include <iostream>
 
 #include "Camera.hpp"
@@ -23,9 +22,8 @@ int main() {
         return EXIT_FAILURE;
     }
 
-
     int renderDistance = 3;
-    Voxel::Manager chunks(renderDistance);
+    Voxel::Manager chunks(renderDistance, 12345u);
     chunks.Build();
 
     Vision::Shader shader("res/shaders/Basic.vert", "res/shaders/Basic.frag");
@@ -35,7 +33,7 @@ int main() {
     texture.Bind();
     shader.SetInt("u_Texture", 0);
 
-    Vision::Camera cam(renderer, {5.0f, 32.2f, 5.0f}, {0.1f, 500.0f}, 45.0f,
+    Vision::Camera cam(renderer, {5.0f, 40.2f, 5.0f}, {0.1f, 500.0f}, 45.0f,
                        5.0f);
 
     std::cout << "Start Rendering" << std::endl;

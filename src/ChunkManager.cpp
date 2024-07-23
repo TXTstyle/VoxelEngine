@@ -2,6 +2,9 @@
 #include "Chunk.hpp"
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
+#include <unordered_map>
+#include <utility>
 
 using namespace Voxel;
 
@@ -15,10 +18,11 @@ const std::array<Voxel::Vertex, 4> Manager::verts = {
 //                        Size of Chunk * Sides * Size of Face
 const uint32_t CHUNK_SIZE = 32 * 32 * 32 * 6 * sizeof(unsigned int);
 
-Manager::Manager(uint32_t renderDistance)
-    : vb(verts.data(), verts.size() * sizeof(Voxel::Vertex)),
-      renderDistLen(renderDistance * 2 + 1), dummy({0, 0, 0}),
+Manager::Manager(uint32_t renderDistance, size_t seed)
+    : chunks(), dummy(), renderDistLen(renderDistance * 2 + 1),
+      vb(verts.data(), verts.size() * sizeof(Voxel::Vertex)),
       ivb(nullptr, CHUNK_SIZE * std::pow(renderDistLen, 3)) {
+
     va.Bind();
     vb.Bind();
 
@@ -34,74 +38,77 @@ Manager::Manager(uint32_t renderDistance)
     ivb.Unbind();
     glVertexAttribDivisor(2, 1);
 
+    Chunk::SetSeed(seed);
     dummy.Fill(0);
 
     chunks.reserve(std::pow(renderDistLen, 3));
     for (uint32_t x = 0; x < renderDistLen; x++) {
         for (uint32_t y = 0; y < renderDistLen; y++) {
             for (uint32_t z = 0; z < renderDistLen; z++) {
-                chunks.emplace_back(glm::vec3(x, y, z));
+                chunks[{x, y, z}] = Chunk();
+                chunks.at({x, y, z}).Gen({x, y, z});
             }
         }
     }
 
-    std::cout << "Manager created, chunk count: "
-              << std::pow(renderDistance * 2 + 1, 3) << std::endl;
+    std::cout << "Manager created, chunk count: " << chunks.size() << std::endl;
 }
 
 Manager::~Manager() { std::cout << "Manager destroyed." << std::endl; }
 
 void Manager::Draw(Vision::Renderer& renderer, Vision::Shader& shader) {
     size_t offset = 0;
-    for (uint32_t i = 0; i < chunks.size(); i++) {
-        auto& chunk = chunks[i];
+    for (auto& chunk : chunks) {
         va.Bind();
         shader.Use();
-        shader.SetVec3f("u_WorldPos", chunk.GetWorldPos() * 32.0f);
-        renderer.Draw(va, shader, chunk.GetInstCount(), offset);
-        offset += chunk.GetInstCount();
+        shader.SetVec3f("u_WorldPos", chunk.first);
+        renderer.Draw(va, shader, chunk.second.GetInstCount(), offset);
+        offset += chunk.second.GetInstCount();
     }
 }
 
 void Manager::Build() {
     size_t offset = 0;
-    for (int i = 0; i < chunks.size(); i++) {
-        BuildChunk(chunks[i]);
+    for (auto& chunk : chunks) {
+        BuildChunk(chunk);
         ivb.Bind();
-        ivb.SubData(offset, chunks[i].GetInstCount() * sizeof(unsigned int),
-                    chunks[i].GetSides());
-        offset += chunks[i].GetInstCount() * sizeof(unsigned int);
+        ivb.SubData(offset, chunk.second.GetInstCount() * sizeof(unsigned int),
+                    chunk.second.GetSides());
+        offset += chunk.second.GetInstCount() * sizeof(unsigned int);
     }
+    std::cout << "Building completed, buffer size: " << offset << ", chunks: " << chunks.size() << std::endl;
 }
 
-void Manager::BuildChunk(Chunk& chunk) {
-    chunk.ClearSides();
+void Manager::BuildChunk(std::pair<const glm::ivec3, Chunk>& chunk) {
+    chunk.second.ClearSides();
     for (int x = 0; x < 32; x++) {
         for (int y = 0; y < 32; y++) {
             for (int z = 0; z < 32; z++) {
-                char voxel = chunk.At({x, y, z});
+                char voxel = chunk.second.At({x, y, z});
 
-                // if empty exit
+                // if empty continue
                 if (!voxel)
-                    return;
+                    continue;
+
 
                 // Check faces
                 if (!At(chunk, {x, y + 1, z}))
-                    chunk.AddSide(x, y, z, VoxelSide::yp, voxel);
+                    chunk.second.AddSide(x, y, z, VoxelSide::yp, voxel);
                 if (!At(chunk, {x, y - 1, z}))
-                    chunk.AddSide(x, y, z, VoxelSide::yn, voxel);
+                    chunk.second.AddSide(x, y, z, VoxelSide::yn, voxel);
                 if (!At(chunk, {x + 1, y, z}))
-                    chunk.AddSide(x, y, z, VoxelSide::xp, voxel);
+                    chunk.second.AddSide(x, y, z, VoxelSide::xp, voxel);
                 if (!At(chunk, {x - 1, y, z}))
-                    chunk.AddSide(x, y, z, VoxelSide::xn, voxel);
+                    chunk.second.AddSide(x, y, z, VoxelSide::xn, voxel);
                 if (!At(chunk, {x, y, z + 1}))
-                    chunk.AddSide(x, y, z, VoxelSide::zp, voxel);
+                    chunk.second.AddSide(x, y, z, VoxelSide::zp, voxel);
                 if (!At(chunk, {x, y, z - 1}))
-                    chunk.AddSide(x, y, z, VoxelSide::zn, voxel);
+                    chunk.second.AddSide(x, y, z, VoxelSide::zn, voxel);
             }
         }
     }
-    std::cout << "Chunk built, sides: " << chunk.GetInstCount() << std::endl;
+    std::cout << "Chunk built, sides: " << chunk.second.GetInstCount()
+              << std::endl;
 }
 
 Chunk& Manager::GetChunkAt(glm::vec3& cPos, const glm::vec3 offset) {
@@ -109,20 +116,15 @@ Chunk& Manager::GetChunkAt(glm::vec3& cPos, const glm::vec3 offset) {
     int y = cPos.y + offset.y;
     int z = cPos.z + offset.z;
 
-    if (x < 0 || y < 0 || z < 0) {
-        return dummy; // Remember THIS!
+    try {
+        return chunks.at({x, y, z});
+    } catch (const std::out_of_range& e) {
+        return dummy;
     }
-    if (x >= renderDistLen || y >= renderDistLen || z >= renderDistLen) {
-        return dummy; // Remember THIS!
-    }
-
-    int index = x + renderDistLen * (y + renderDistLen * z);
-
-    return chunks[index];
 }
 
-char Manager::At(Chunk& chunk, glm::vec3 pos) {
-    glm::vec3 cPos = chunk.GetWorldPos();
+char Manager::At(std::pair<const glm::ivec3, Chunk>& chunk, glm::vec3 pos) {
+    glm::vec3 cPos = chunk.first;
 
     if (pos.x == -1) {
         return GetChunkAt(cPos, {-1, 0, 0}).At({31, pos.y, pos.z});
@@ -140,5 +142,5 @@ char Manager::At(Chunk& chunk, glm::vec3 pos) {
         return GetChunkAt(cPos, {0, 0, 1}).At({pos.x, pos.y, 0});
     }
 
-    return chunk.At(pos);
+    return chunk.second.At(pos);
 }
