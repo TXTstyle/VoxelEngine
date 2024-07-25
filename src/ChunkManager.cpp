@@ -1,10 +1,12 @@
 #include "ChunkManager.hpp"
 #include "Chunk.hpp"
 #include <cmath>
+#include <glm/ext/vector_int3.hpp>
 #include <iostream>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
+#include <glm/gtx/string_cast.hpp>
 
 using namespace Voxel;
 
@@ -19,9 +21,9 @@ const std::array<Voxel::Vertex, 4> Manager::verts = {
 const uint32_t CHUNK_SIZE = 32 * 32 * 32 * 6 * sizeof(unsigned int);
 
 Manager::Manager(uint32_t renderDistance, size_t seed)
-    : chunks(), dummy(), renderDistLen(renderDistance * 2 + 1),
+    : chunks(), dummy(), renderDistance(renderDistance),
       vb(verts.data(), verts.size() * sizeof(Voxel::Vertex)),
-      ivb(nullptr, CHUNK_SIZE * std::pow(renderDistLen, 3)) {
+      ivb(nullptr, CHUNK_SIZE * std::pow(renderDistance * 2 + 1, 3)) {
 
     va.Bind();
     vb.Bind();
@@ -41,20 +43,31 @@ Manager::Manager(uint32_t renderDistance, size_t seed)
     Chunk::SetSeed(seed);
     dummy.Fill(0);
 
-    chunks.reserve(std::pow(renderDistLen, 3));
-    for (uint32_t x = 0; x < renderDistLen; x++) {
-        for (uint32_t y = 0; y < renderDistLen; y++) {
-            for (uint32_t z = 0; z < renderDistLen; z++) {
-                chunks[{x, y, z}] = Chunk();
-                chunks.at({x, y, z}).Gen({x, y, z});
-            }
-        }
-    }
+    chunks.reserve(std::pow(renderDistance * 2 + 1, 3));
 
     std::cout << "Manager created, chunk count: " << chunks.size() << std::endl;
 }
 
 Manager::~Manager() { std::cout << "Manager destroyed." << std::endl; }
+
+void Manager::Load(glm::ivec3 pos) {
+    if (pos == chunkPos)
+        return;
+
+    chunks.clear();
+
+    LoadChunk(pos);
+    for (int x = -renderDistance; x <= renderDistance; x++) {
+        for (int y = -renderDistance; y <= renderDistance; y++) {
+            for (int z = -renderDistance; z <= renderDistance; z++) {
+                glm::ivec3 offset = {x, y, z};
+                LoadChunk(pos + offset);
+            }
+        }
+    }
+    chunkPos = pos;
+    shouldRebuild = true;
+}
 
 void Manager::Draw(Vision::Renderer& renderer, Vision::Shader& shader) {
     size_t offset = 0;
@@ -68,15 +81,21 @@ void Manager::Draw(Vision::Renderer& renderer, Vision::Shader& shader) {
 }
 
 void Manager::Build() {
+    if (!shouldRebuild)
+        return;
+
     size_t offset = 0;
     for (auto& chunk : chunks) {
+        chunk.second.Gen(chunk.first);
         BuildChunk(chunk);
         ivb.Bind();
         ivb.SubData(offset, chunk.second.GetInstCount() * sizeof(unsigned int),
                     chunk.second.GetSides());
         offset += chunk.second.GetInstCount() * sizeof(unsigned int);
     }
-    std::cout << "Building completed, buffer size: " << offset << ", chunks: " << chunks.size() << std::endl;
+    std::cout << "Building completed, buffer size: " << offset
+              << ", chunks: " << chunks.size() << std::endl;
+    shouldRebuild = false; // Remember!!!
 }
 
 void Manager::BuildChunk(std::pair<const glm::ivec3, Chunk>& chunk) {
@@ -89,7 +108,6 @@ void Manager::BuildChunk(std::pair<const glm::ivec3, Chunk>& chunk) {
                 // if empty continue
                 if (!voxel)
                     continue;
-
 
                 // Check faces
                 if (!At(chunk, {x, y + 1, z}))
@@ -143,4 +161,29 @@ char Manager::At(std::pair<const glm::ivec3, Chunk>& chunk, glm::vec3 pos) {
     }
 
     return chunk.second.At(pos);
+}
+
+void Manager::LoadChunk(const glm::ivec3 pos) {
+    if (IsChunkLoaded(pos))
+        return;
+
+    chunks[pos] = Chunk();
+    std::cout << "Chunk loaded, at: " << pos.x << " " << pos.y << " " << pos.z
+              << std::endl;
+}
+
+void Manager::UnLoadChunk(const glm::ivec3 pos) {
+    if (!IsChunkLoaded(pos))
+        return;
+
+    chunks.erase(pos);
+}
+
+bool Manager::IsChunkLoaded(const glm::ivec3& pos) {
+    try {
+        chunks.at(pos);
+    } catch (const std::out_of_range& e) {
+        return false;
+    }
+    return true;
 }

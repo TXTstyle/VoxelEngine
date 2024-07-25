@@ -22,9 +22,8 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    int renderDistance = 3;
+    int renderDistance = 1;
     Voxel::Manager chunks(renderDistance, 12345u);
-    chunks.Build();
 
     Vision::Shader shader("res/shaders/Basic.vert", "res/shaders/Basic.frag");
     shader.Use();
@@ -33,7 +32,7 @@ int main() {
     texture.Bind();
     shader.SetInt("u_Texture", 0);
 
-    Vision::Camera cam(renderer, {5.0f, 40.2f, 5.0f}, {0.1f, 500.0f}, 45.0f,
+    Vision::Camera cam(renderer, {40.0f, 40.0f, 40.0f}, {0.1f, 500.0f}, 45.0f,
                        5.0f);
 
     std::cout << "Start Rendering" << std::endl;
@@ -47,6 +46,9 @@ int main() {
         shader.Use();
         shader.SetMat4f("u_MVP", mvp);
 
+
+        chunks.Load(cam.GetChunkPos());
+        chunks.Build();
         chunks.Draw(renderer, shader);
 
         renderer.Swap();

@@ -36,7 +36,9 @@ void Texture::Generate(uint32_t width, uint32_t height, unsigned char* data) {
     glBindTexture(GL_TEXTURE_2D, renderID);
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, imgFormat,
                  GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterMin);

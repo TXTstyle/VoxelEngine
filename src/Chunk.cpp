@@ -45,6 +45,9 @@ void Chunk::Fill(const char voxel) {
 }
 
 void Chunk::Gen(glm::ivec3 offset) {
+    if (isBuilt)
+        return;
+
     for (int y = 0; y < 32; ++y) {
         for (int x = 0; x < 32; ++x) {
             for (int z = 0; z < 32; z++) {
@@ -65,4 +68,5 @@ void Chunk::Gen(glm::ivec3 offset) {
     }
     std::cout << "Chunk generated, at: " << offset.x << " " << offset.y << " "
               << offset.z << std::endl;
+    isBuilt = true;
 }

@@ -53,6 +53,7 @@ class Chunk {
   private:
     std::array<std::array<std::array<char, 32>, 32>, 32> data;
     std::vector<unsigned int> sides;
+    bool isBuilt = false;
 
     static siv::PerlinNoise::seed_type seed;
     static siv::PerlinNoise perlin;
