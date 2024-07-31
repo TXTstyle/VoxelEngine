@@ -35,7 +35,8 @@ class Camera {
 
     glm::mat4& getProjMat();
     glm::mat4& getViewMat();
-    glm::ivec3 GetChunkPos();
+
+    glm::ivec2 GetChunkPos();
 
     void Controls(Renderer& renderer);
 };

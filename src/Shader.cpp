@@ -117,6 +117,13 @@ void Shader::SetVec3f(const std::string& name, glm::vec3 values,
     glUniform3f(glGetUniformLocation(RenderID, name.c_str()), values.x,
                 values.y, values.z);
 }
+void Shader::SetVec2f(const std::string& name, glm::vec2 values,
+                      bool useShader) {
+    if (useShader)
+        this->Use();
+    glUniform2f(glGetUniformLocation(RenderID, name.c_str()), values.x,
+                values.y);
+}
 void Shader::SetMat4f(const std::string& name, const glm::mat4& matrix,
                       bool useShader) {
     if (useShader)

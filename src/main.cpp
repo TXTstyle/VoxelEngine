@@ -32,7 +32,7 @@ int main() {
     texture.Bind();
     shader.SetInt("u_Texture", 0);
 
-    Vision::Camera cam(renderer, {40.0f, 40.0f, 40.0f}, {0.1f, 500.0f}, 45.0f,
+    Vision::Camera cam(renderer, {0.0f, 100.0f, 0.0f}, {0.1f, 200.0f}, 45.0f,
                        5.0f);
 
     std::cout << "Start Rendering" << std::endl;

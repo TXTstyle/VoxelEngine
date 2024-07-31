@@ -118,8 +118,9 @@ void Camera::Controls(Renderer& renderer) {
                                camClip.x, camClip.y);
 }
 
-glm::ivec3 Camera::GetChunkPos() {
-    return (camPos / 32.0f); 
+glm::ivec2 Camera::GetChunkPos() {
+    glm::ivec2 pos = {camPos.x, camPos.z}; 
+    return pos / 16;
 }
 
 glm::mat4& Camera::getProjMat() { return projMat; }

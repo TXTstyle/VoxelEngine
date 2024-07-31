@@ -18,12 +18,12 @@ const std::array<Voxel::Vertex, 4> Manager::verts = {
 };
 
 //                        Size of Chunk * Sides * Size of Face
-const uint32_t CHUNK_SIZE = 32 * 32 * 32 * 6 * sizeof(unsigned int);
+const uint32_t CHUNK_SIZE = 16 * 256 * 16 * 6 * sizeof(unsigned int);
 
 Manager::Manager(uint32_t renderDistance, size_t seed)
     : chunks(), dummy(), renderDistance(renderDistance),
       vb(verts.data(), verts.size() * sizeof(Voxel::Vertex)),
-      ivb(nullptr, CHUNK_SIZE * std::pow(renderDistance * 2 + 1, 3)) {
+      ivb(nullptr, CHUNK_SIZE * std::pow(renderDistance * 2 + 1, 2)) {
 
     va.Bind();
     vb.Bind();
@@ -43,14 +43,14 @@ Manager::Manager(uint32_t renderDistance, size_t seed)
     Chunk::SetSeed(seed);
     dummy.Fill(0);
 
-    chunks.reserve(std::pow(renderDistance * 2 + 1, 3));
+    chunks.reserve(std::pow(renderDistance * 2 + 1, 2));
 
     std::cout << "Manager created, chunk count: " << chunks.size() << std::endl;
 }
 
 Manager::~Manager() { std::cout << "Manager destroyed." << std::endl; }
 
-void Manager::Load(glm::ivec3 pos) {
+void Manager::Load(glm::ivec2 pos) {
     if (pos == chunkPos)
         return;
 
@@ -59,10 +59,8 @@ void Manager::Load(glm::ivec3 pos) {
     LoadChunk(pos);
     for (int x = -renderDistance; x <= renderDistance; x++) {
         for (int y = -renderDistance; y <= renderDistance; y++) {
-            for (int z = -renderDistance; z <= renderDistance; z++) {
-                glm::ivec3 offset = {x, y, z};
-                LoadChunk(pos + offset);
-            }
+            glm::ivec2 offset = {x, y};
+            LoadChunk(pos + offset);
         }
     }
     chunkPos = pos;
@@ -74,7 +72,7 @@ void Manager::Draw(Vision::Renderer& renderer, Vision::Shader& shader) {
     for (auto& chunk : chunks) {
         va.Bind();
         shader.Use();
-        shader.SetVec3f("u_WorldPos", chunk.first);
+        shader.SetVec2f("u_WorldPos", chunk.first);
         renderer.Draw(va, shader, chunk.second.GetInstCount(), offset);
         offset += chunk.second.GetInstCount();
     }
@@ -98,11 +96,11 @@ void Manager::Build() {
     shouldRebuild = false; // Remember!!!
 }
 
-void Manager::BuildChunk(std::pair<const glm::ivec3, Chunk>& chunk) {
+void Manager::BuildChunk(std::pair<const glm::ivec2, Chunk>& chunk) {
     chunk.second.ClearSides();
-    for (int x = 0; x < 32; x++) {
-        for (int y = 0; y < 32; y++) {
-            for (int z = 0; z < 32; z++) {
+    for (int x = 0; x < 16; x++) {
+        for (int y = 0; y < 256; y++) {
+            for (int z = 0; z < 16; z++) {
                 char voxel = chunk.second.At({x, y, z});
 
                 // if empty continue
@@ -129,57 +127,55 @@ void Manager::BuildChunk(std::pair<const glm::ivec3, Chunk>& chunk) {
               << std::endl;
 }
 
-Chunk& Manager::GetChunkAt(glm::vec3& cPos, const glm::vec3 offset) {
+Chunk& Manager::GetChunkAt(glm::ivec2& cPos, const glm::ivec2 offset) {
     int x = cPos.x + offset.x;
     int y = cPos.y + offset.y;
-    int z = cPos.z + offset.z;
 
     try {
-        return chunks.at({x, y, z});
+        return chunks.at({x, y});
     } catch (const std::out_of_range& e) {
         return dummy;
     }
 }
 
-char Manager::At(std::pair<const glm::ivec3, Chunk>& chunk, glm::vec3 pos) {
-    glm::vec3 cPos = chunk.first;
+char Manager::At(std::pair<const glm::ivec2, Chunk>& chunk, glm::ivec3 pos) {
+    glm::ivec2 cPos = chunk.first;
 
     if (pos.x == -1) {
-        return GetChunkAt(cPos, {-1, 0, 0}).At({31, pos.y, pos.z});
+        return GetChunkAt(cPos, {-1, 0}).At({15, pos.y, pos.z});
     } else if (pos.y == -1) {
-        return GetChunkAt(cPos, {0, -1, 0}).At({pos.x, 31, pos.z});
+        return 0;
     } else if (pos.z == -1) {
-        return GetChunkAt(cPos, {0, 0, -1}).At({pos.x, pos.y, 31});
+        return GetChunkAt(cPos, {0, -1}).At({pos.x, pos.y, 15});
     }
 
-    if (pos.x == 32) {
-        return GetChunkAt(cPos, {1, 0, 0}).At({0, pos.y, pos.z});
-    } else if (pos.y == 32) {
-        return GetChunkAt(cPos, {0, 1, 0}).At({pos.x, 0, pos.z});
-    } else if (pos.z == 32) {
-        return GetChunkAt(cPos, {0, 0, 1}).At({pos.x, pos.y, 0});
+    if (pos.x == 16) {
+        return GetChunkAt(cPos, {1, 0}).At({0, pos.y, pos.z});
+    } else if (pos.y == 256) {
+        return 0;
+    } else if (pos.z == 16) {
+        return GetChunkAt(cPos, {0, 1}).At({pos.x, pos.y, 0});
     }
 
     return chunk.second.At(pos);
 }
 
-void Manager::LoadChunk(const glm::ivec3 pos) {
+void Manager::LoadChunk(const glm::ivec2 pos) {
     if (IsChunkLoaded(pos))
         return;
 
     chunks[pos] = Chunk();
-    std::cout << "Chunk loaded, at: " << pos.x << " " << pos.y << " " << pos.z
-              << std::endl;
+    std::cout << "Chunk loaded, at: " << pos.x << " " << pos.y << std::endl;
 }
 
-void Manager::UnLoadChunk(const glm::ivec3 pos) {
+void Manager::UnLoadChunk(const glm::ivec2 pos) {
     if (!IsChunkLoaded(pos))
         return;
 
     chunks.erase(pos);
 }
 
-bool Manager::IsChunkLoaded(const glm::ivec3& pos) {
+bool Manager::IsChunkLoaded(const glm::ivec2& pos) {
     try {
         chunks.at(pos);
     } catch (const std::out_of_range& e) {

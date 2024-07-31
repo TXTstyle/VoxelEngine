@@ -37,7 +37,7 @@ class Chunk {
     char At(glm::vec3 pos);
 
     void Fill(const char voxel);
-    void Gen(glm::ivec3 offset);
+    void Gen(glm::ivec2 offset);
 
     inline size_t GetInstCount() { return sides.size(); }
     inline void SetVoxel(char voxel, unsigned int x, unsigned int y,
@@ -51,7 +51,7 @@ class Chunk {
     inline static siv::PerlinNoise::seed_type GetSeed() { return seed; };
 
   private:
-    std::array<std::array<std::array<char, 32>, 32>, 32> data;
+    std::array<std::array<std::array<char, 16>, 256>, 16> data;
     std::vector<unsigned int> sides;
     bool isBuilt = false;
 

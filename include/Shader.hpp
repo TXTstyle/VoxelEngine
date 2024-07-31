@@ -35,6 +35,8 @@ class Shader {
                   bool useShader = false);
     void SetVec3f(const std::string& name, glm::vec3 values,
                   bool useShader = false);
+    void SetVec2f(const std::string& name, glm::vec2 values,
+                  bool useShader = false);
     void SetMat4f(const std::string& name, const glm::mat4& matrix,
                   bool useShader = false);
 
