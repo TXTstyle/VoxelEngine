@@ -65,6 +65,6 @@ void Chunk::Gen(glm::ivec2 offset) {
             }
         }
     }
-    std::cout << "Chunk generated, at: " << offset.x << " " << offset.y << std::endl;
+    // std::cout << "Chunk generated, at: " << offset.x << " " << offset.y << std::endl;
     isBuilt = true;
 }

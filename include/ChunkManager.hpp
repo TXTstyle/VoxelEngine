@@ -3,6 +3,7 @@
 #include "Renderer.hpp"
 #include "Chunk.hpp"
 #include <glm/ext/vector_int3.hpp>
+#include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 #include <unordered_map>
@@ -20,6 +21,9 @@ class Manager {
 
   private:
     std::unordered_map<glm::ivec2, Chunk> chunks;
+    std::vector<glm::ivec2> loadChunkList;
+    std::vector<glm::ivec2> unLoadChunkList;
+
     Chunk dummy;
     int renderDistance;
     bool shouldRebuild = true;

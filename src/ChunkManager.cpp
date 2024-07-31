@@ -2,6 +2,7 @@
 #include "Chunk.hpp"
 #include <cmath>
 #include <glm/ext/vector_int3.hpp>
+#include <glm/geometric.hpp>
 #include <iostream>
 #include <stdexcept>
 #include <unordered_map>
@@ -54,13 +55,17 @@ void Manager::Load(glm::ivec2 pos) {
     if (pos == chunkPos)
         return;
 
-    chunks.clear();
-
     LoadChunk(pos);
     for (int x = -renderDistance; x <= renderDistance; x++) {
         for (int y = -renderDistance; y <= renderDistance; y++) {
             glm::ivec2 offset = {x, y};
-            LoadChunk(pos + offset);
+            loadChunkList.push_back(pos + offset);
+        }
+    }
+    for (auto& chunk : chunks) {
+        float distance = glm::distance((glm::vec2)chunk.first, (glm::vec2)pos);
+        if (distance > renderDistance + 1.5f) {
+            unLoadChunkList.push_back(chunk.first);
         }
     }
     chunkPos = pos;
@@ -82,6 +87,17 @@ void Manager::Build() {
     if (!shouldRebuild)
         return;
 
+    for (auto& pos : loadChunkList) {
+        LoadChunk(pos);
+    }
+
+    for (auto& pos : unLoadChunkList) {
+        UnLoadChunk(pos);
+    }
+
+    loadChunkList.clear();
+    unLoadChunkList.clear();
+
     size_t offset = 0;
     for (auto& chunk : chunks) {
         chunk.second.Gen(chunk.first);
@@ -92,7 +108,7 @@ void Manager::Build() {
         offset += chunk.second.GetInstCount() * sizeof(unsigned int);
     }
     std::cout << "Building completed, buffer size: " << offset
-              << ", chunks: " << chunks.size() << std::endl;
+              << "b, chunks: " << chunks.size() << std::endl;
     shouldRebuild = false; // Remember!!!
 }
 
@@ -123,8 +139,7 @@ void Manager::BuildChunk(std::pair<const glm::ivec2, Chunk>& chunk) {
             }
         }
     }
-    std::cout << "Chunk built, sides: " << chunk.second.GetInstCount()
-              << std::endl;
+    // std::cout << "Chunk built, sides: " << chunk.second.GetInstCount() << std::endl;
 }
 
 Chunk& Manager::GetChunkAt(glm::ivec2& cPos, const glm::ivec2 offset) {
@@ -165,7 +180,7 @@ void Manager::LoadChunk(const glm::ivec2 pos) {
         return;
 
     chunks[pos] = Chunk();
-    std::cout << "Chunk loaded, at: " << pos.x << " " << pos.y << std::endl;
+    // std::cout << "Chunk loaded, at: " << pos.x << " " << pos.y << std::endl;
 }
 
 void Manager::UnLoadChunk(const glm::ivec2 pos) {

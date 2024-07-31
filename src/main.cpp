@@ -22,7 +22,7 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    int renderDistance = 1;
+    int renderDistance = 3;
     Voxel::Manager chunks(renderDistance, 12345u);
 
     Vision::Shader shader("res/shaders/Basic.vert", "res/shaders/Basic.frag");
