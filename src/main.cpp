@@ -37,15 +37,12 @@ int main() {
 
     std::cout << "Start Rendering" << std::endl;
     while (!renderer.ShouldClose()) {
-        renderer.Clear({1, 1, 1});
-        glm::vec2 size = renderer.GetWindowSize();
-
+        renderer.Clear({0.61, 0.8, 1});
         cam.Controls(renderer);
 
         glm::mat4 mvp = cam.getProjMat() * cam.getViewMat();
         shader.Use();
         shader.SetMat4f("u_MVP", mvp);
-
 
         chunks.Load(cam.GetChunkPos());
         chunks.Build();

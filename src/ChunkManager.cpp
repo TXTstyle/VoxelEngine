@@ -1,13 +1,18 @@
 #include "ChunkManager.hpp"
 #include "Chunk.hpp"
+
+#include <algorithm>
 #include <cmath>
 #include <glm/ext/vector_int3.hpp>
 #include <glm/geometric.hpp>
 #include <iostream>
 #include <stdexcept>
+#include <thread>
 #include <unordered_map>
 #include <utility>
 #include <glm/gtx/string_cast.hpp>
+#include <vector>
+#include <omp.h>
 
 using namespace Voxel;
 
@@ -99,14 +104,15 @@ void Manager::Build() {
     unLoadChunkList.clear();
 
     size_t offset = 0;
+    ivb.Bind();
     for (auto& chunk : chunks) {
         chunk.second.Gen(chunk.first);
         BuildChunk(chunk);
-        ivb.Bind();
         ivb.SubData(offset, chunk.second.GetInstCount() * sizeof(unsigned int),
                     chunk.second.GetSides());
         offset += chunk.second.GetInstCount() * sizeof(unsigned int);
     }
+
     std::cout << "Building completed, buffer size: " << offset
               << "b, chunks: " << chunks.size() << std::endl;
     shouldRebuild = false; // Remember!!!
@@ -139,7 +145,8 @@ void Manager::BuildChunk(std::pair<const glm::ivec2, Chunk>& chunk) {
             }
         }
     }
-    // std::cout << "Chunk built, sides: " << chunk.second.GetInstCount() << std::endl;
+    // std::cout << "Chunk built, sides: " << chunk.second.GetInstCount() <<
+    // std::endl;
 }
 
 Chunk& Manager::GetChunkAt(glm::ivec2& cPos, const glm::ivec2 offset) {
@@ -159,7 +166,7 @@ char Manager::At(std::pair<const glm::ivec2, Chunk>& chunk, glm::ivec3 pos) {
     if (pos.x == -1) {
         return GetChunkAt(cPos, {-1, 0}).At({15, pos.y, pos.z});
     } else if (pos.y == -1) {
-        return 0;
+        return 1;
     } else if (pos.z == -1) {
         return GetChunkAt(cPos, {0, -1}).At({pos.x, pos.y, 15});
     }
